@@ -1,13 +1,22 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
-
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { useFonts } from 'expo-font';
+import { Redirect, Slot } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import 'react-native-reanimated';
+import { Provider, useSelector } from 'react-redux';
+import { RootState, store } from '../store/index';
+
+const AuthGate = () => {
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+
+  if (!isAuthenticated) {
+    return <Redirect href='/login' />;
+  }
+
+  return <Slot />;
+};
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -20,14 +29,11 @@ export default function RootLayout() {
   }
 
   return (
-    <GluestackUIProvider mode='light'>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
-          <Stack.Screen name='+not-found' />
-        </Stack>
-        <StatusBar style='auto' />
-      </ThemeProvider>
-    </GluestackUIProvider>
+    <Provider store={store}>
+      <GluestackUIProvider mode={colorScheme === 'dark' ? 'dark' : 'light'}>
+        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+        <AuthGate />
+      </GluestackUIProvider>
+    </Provider>
   );
 }
