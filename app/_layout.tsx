@@ -2,21 +2,12 @@ import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useFonts } from 'expo-font';
-import { Redirect, Slot } from 'expo-router';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaView } from 'react-native';
 import 'react-native-reanimated';
-import { Provider, useSelector } from 'react-redux';
-import { RootState, store } from '../store/index';
-
-const AuthGate = () => {
-  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
-
-  if (!isAuthenticated) {
-    return <Redirect href='/login' />;
-  }
-
-  return <Slot />;
-};
+import { Provider } from 'react-redux';
+import { store } from '../store/index';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -32,7 +23,13 @@ export default function RootLayout() {
     <Provider store={store}>
       <GluestackUIProvider mode={colorScheme === 'dark' ? 'dark' : 'light'}>
         <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-        <AuthGate />
+        <SafeAreaView className='flex-1 bg-background-0'>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name='login' />
+            <Stack.Screen name='(auth)' />
+            <Stack.Screen name='+not-found' />
+          </Stack>
+        </SafeAreaView>
       </GluestackUIProvider>
     </Provider>
   );
