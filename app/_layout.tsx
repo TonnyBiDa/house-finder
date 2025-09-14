@@ -4,8 +4,8 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView } from 'react-native';
-import 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import 'react-native-worklets';
 import { Provider } from 'react-redux';
 import { store } from '../store/index';
 
