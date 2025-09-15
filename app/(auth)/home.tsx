@@ -56,7 +56,7 @@ export default function Home() {
   const handleSelect = (item: any) => {
     // setQuery(item.description);
     router.push({
-      pathname: '/details',
+      pathname: '/overall',
       params: { address: item.description },
     });
     setResults([]);

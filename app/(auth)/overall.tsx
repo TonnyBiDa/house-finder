@@ -32,7 +32,7 @@ function SchoolMarker({ school }: { school: School }) {
   );
 }
 
-export default function Details() {
+export default function Overall() {
   const { address } = useLocalSearchParams<{ address: string }>();
 
   const [coords, setCoords] = useState<Coordinates | null>(null);
