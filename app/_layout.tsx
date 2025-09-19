@@ -23,7 +23,7 @@ export default function RootLayout() {
     <Provider store={store}>
       <GluestackUIProvider mode={colorScheme === 'dark' ? 'dark' : 'light'}>
         <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-        <SafeAreaView className='flex-1 bg-background-0'>
+        <SafeAreaView className='h-screen bg-background-0'>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name='login' />
             <Stack.Screen name='(auth)' />
