@@ -21,11 +21,7 @@ const iconMap: Record<PinType, any> = {
 
 export function PinCard({ pinType, number, colorClass }: Props) {
   return (
-    <Card
-      size='md'
-      variant='elevated'
-      className='border-4 rounded-xl border-sky-500 inline-flex w-auto max-w-max'
-    >
+    <Card size='sm' variant='elevated' className='border-4 rounded-xl border-sky-500'>
       <Box className='flex flex-row items-center gap-2'>
         <Avatar size='sm'>
           <AvatarFallbackText>{pinType}</AvatarFallbackText>

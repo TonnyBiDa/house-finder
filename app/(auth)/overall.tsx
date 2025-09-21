@@ -6,12 +6,26 @@ import { Text } from '@/components/ui/text';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import MapView, { Marker, Polyline } from 'react-native-maps';
+
+import { RouteCard } from '@/components/RouteCard';
+
+import { Button, ButtonIcon } from '@/components/ui/button';
+import { ArrowLeftIcon } from '@/components/ui/icon';
 // @ts-ignore
 import polyline from '@mapbox/polyline';
+import { ScrollView } from 'react-native';
 
 type Coordinates = {
   latitude: number;
   longitude: number;
+};
+
+type Route = {
+  coordinates: Coordinates[];
+  color: string;
+  placeName: string;
+  distance: string;
+  costTime: string;
 };
 
 type Place = {
@@ -61,9 +75,18 @@ export default function Overall() {
   const [coords, setCoords] = useState<Coordinates | null>(null);
   const [placesByType, setPlacesByType] = useState<Record<string, Place[]>>({});
   const [loading, setLoading] = useState(true);
+  const [showDetails, setShowDetails] = useState(false);
 
   const [selectedPlaceType, setSelectedPlaceType] = useState<string | null>(null);
-  const [routes, setRoutes] = useState<Coordinates[][]>([]);
+  const [routes, setRoutes] = useState<Route[]>([]);
+
+  const getRandomRgba = () => {
+    const r = Math.floor(Math.random() * 256);
+    const g = Math.floor(Math.random() * 256);
+    const b = Math.floor(Math.random() * 256);
+    const a = 0.7; // semi-transparent
+    return `rgba(${r}, ${g}, ${b}, ${a})`;
+  };
 
   // Fetch coordinates from Google Geocoding API
   const fetchCoordinates = async (addr: string) => {
@@ -112,7 +135,7 @@ export default function Overall() {
   const fetchRoutesForType = async (type: string) => {
     if (!coords) return;
     const places = placesByType[type] || [];
-    const allRoutes: Coordinates[][] = [];
+    const allRoutes: Route[] = [];
 
     for (const place of places) {
       try {
@@ -121,12 +144,24 @@ export default function Overall() {
         );
         const json = await res.json();
         const points = json.routes[0]?.overview_polyline?.points;
+
         if (points) {
           const decoded = polyline.decode(points).map(([lat, lng]: [number, number]) => ({
             latitude: lat,
             longitude: lng,
           }));
-          allRoutes.push(decoded); // push each route separately
+
+          const leg = json.routes[0]?.legs?.[0];
+          const distance = leg?.distance?.text ?? 'N/A';
+          const duration = leg?.duration?.text ?? 'N/A';
+
+          allRoutes.push({
+            coordinates: decoded,
+            color: getRandomRgba(),
+            placeName: place.name,
+            distance,
+            costTime: duration,
+          });
         }
       } catch (err) {
         console.error('Directions API error:', err);
@@ -139,6 +174,13 @@ export default function Overall() {
   const onPinCardPress = async (type: string) => {
     setSelectedPlaceType(type);
     await fetchRoutesForType(type);
+    setShowDetails(true);
+  };
+
+  const backToOverall = () => {
+    setShowDetails(false);
+    setSelectedPlaceType(null);
+    setRoutes([]);
   };
 
   useEffect(() => {
@@ -202,7 +244,12 @@ export default function Overall() {
               ));
             })}
             {routes.map((route, index) => (
-              <Polyline key={index} coordinates={route} strokeWidth={3} strokeColor='blue' />
+              <Polyline
+                key={index}
+                coordinates={route.coordinates}
+                strokeWidth={3}
+                strokeColor={route.color}
+              />
             ))}
           </MapView>
         ) : (
@@ -213,14 +260,34 @@ export default function Overall() {
       </Box>
 
       <Box className='h-[60vh] p-4'>
-        <Text className='mb-2'>{address}</Text>
-        <Box className='flex flex-row flex-wrap gap-2'>
-          {Object.entries(placesByType).map(([type, places]) => (
-            <Pressable key={type} onPress={() => onPinCardPress(type)}>
-              <PinCard pinType={type} colorClass={typeToColor[type]} number={places.length} />
-            </Pressable>
-          ))}
+        <Box className='flex flex-row'>
+          {showDetails && (
+            <Button size='md' className='p-3' onPress={() => backToOverall()}>
+              <ButtonIcon as={ArrowLeftIcon} />
+            </Button>
+          )}
+          <Text className='mb-2'>{address}</Text>
         </Box>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <Box className='flex flex-row flex-wrap gap-2'>
+            {showDetails
+              ? routes.map((route, index) => (
+                  <RouteCard
+                    key={index}
+                    routeType='walk'
+                    distance={route.distance}
+                    addressName={route.placeName}
+                    color={route.color}
+                    costTime={route.costTime}
+                  />
+                ))
+              : Object.entries(placesByType).map(([type, places]) => (
+                  <Pressable key={type} onPress={() => onPinCardPress(type)}>
+                    <PinCard pinType={type} colorClass={typeToColor[type]} number={places.length} />
+                  </Pressable>
+                ))}
+          </Box>
+        </ScrollView>
       </Box>
     </Box>
   );
