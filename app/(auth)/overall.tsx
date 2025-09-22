@@ -60,9 +60,8 @@ function PlaceMarker({
       coordinate={place.location}
       title={place.name}
       tracksViewChanges={tracksView}
-      pinColor={colorClass}
+      anchor={{ x: 0.5, y: 0.5 }}
     >
-      {/* Optional custom marker view */}
       <Box className={`w-3 h-3 rounded-full border border-white ${colorClass}`} />
     </Marker>
   );
@@ -74,7 +73,7 @@ export default function Overall() {
 
   const [coords, setCoords] = useState<Coordinates | null>(null);
   const [placesByType, setPlacesByType] = useState<Record<string, Place[]>>({});
-  const [loading, setLoading] = useState(true);
+  const [coordinateLoading, setCoordinateLoading] = useState(true);
   const [showDetails, setShowDetails] = useState(false);
 
   const [selectedPlaceType, setSelectedPlaceType] = useState<string | null>(null);
@@ -107,7 +106,7 @@ export default function Overall() {
     } catch (err) {
       console.error('Geocoding error:', err);
     } finally {
-      setLoading(false);
+      setCoordinateLoading(false);
     }
   };
 
@@ -216,7 +215,7 @@ export default function Overall() {
   return (
     <Box className='h-screen bg-background-0'>
       <Box className='h-[40vh]'>
-        {loading ? (
+        {coordinateLoading ? (
           <Box className='flex-1 justify-center items-center gap-4 p-3 rounded-md bg-background-100'>
             <Box className='flex-[0.8] w-full'>
               <Skeleton variant='sharp' className='flex-1 w-full' />
@@ -260,15 +259,19 @@ export default function Overall() {
       </Box>
 
       <Box className='h-[60vh] p-4'>
-        <Box className='flex flex-row'>
+        <Box className='flex flex-row items-center gap-2 mb-2'>
           {showDetails && (
             <Button size='md' className='p-3' onPress={() => backToOverall()}>
               <ButtonIcon as={ArrowLeftIcon} />
             </Button>
           )}
-          <Text className='mb-2'>{address}</Text>
+          <Text className='flex-shrink flex-grow break-words'>{address}</Text>
         </Box>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: 45 }} // give space for last item
+          showsVerticalScrollIndicator={true}
+        >
           <Box className='flex flex-row flex-wrap gap-2'>
             {showDetails
               ? routes.map((route, index) => (
