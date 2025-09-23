@@ -1,16 +1,16 @@
-import { PinCard } from '@/components/PinCard';
 import { Box } from '@/components/ui/box';
-import { Pressable } from '@/components/ui/pressable';
 import { Skeleton, SkeletonText } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 
+import { PinCard } from '@/components/PinCard';
 import { RouteCard } from '@/components/RouteCard';
-
 import { Button, ButtonIcon } from '@/components/ui/button';
 import { ArrowLeftIcon } from '@/components/ui/icon';
+import { Pressable } from '@/components/ui/pressable';
+import { Spinner } from '@/components/ui/spinner';
 // @ts-ignore
 import polyline from '@mapbox/polyline';
 import { ScrollView } from 'react-native';
@@ -74,7 +74,7 @@ export default function Overall() {
   const [coords, setCoords] = useState<Coordinates | null>(null);
   const [placesByType, setPlacesByType] = useState<Record<string, Place[]>>({});
   const [coordinateLoading, setCoordinateLoading] = useState(true);
-  const [showDetails, setShowDetails] = useState(false);
+  const [showDetails, setShowDetails] = useState('false');
 
   const [selectedPlaceType, setSelectedPlaceType] = useState<string | null>(null);
   const [routes, setRoutes] = useState<Route[]>([]);
@@ -171,13 +171,14 @@ export default function Overall() {
   };
 
   const onPinCardPress = async (type: string) => {
+    setShowDetails('loading');
     setSelectedPlaceType(type);
     await fetchRoutesForType(type);
-    setShowDetails(true);
+    setShowDetails('show');
   };
 
   const backToOverall = () => {
-    setShowDetails(false);
+    setShowDetails('hide');
     setSelectedPlaceType(null);
     setRoutes([]);
   };
@@ -260,37 +261,48 @@ export default function Overall() {
 
       <Box className='h-[60vh] p-4'>
         <Box className='flex flex-row items-center gap-2 mb-2'>
-          {showDetails && (
+          {showDetails === 'show' && (
             <Button size='md' className='p-3' onPress={() => backToOverall()}>
               <ButtonIcon as={ArrowLeftIcon} />
             </Button>
           )}
           <Text className='flex-shrink flex-grow break-words'>{address}</Text>
         </Box>
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ paddingBottom: 45 }} // give space for last item
-          showsVerticalScrollIndicator={true}
-        >
-          <Box className='flex flex-row flex-wrap gap-2'>
-            {showDetails
-              ? routes.map((route, index) => (
-                  <RouteCard
-                    key={index}
-                    routeType='walk'
-                    distance={route.distance}
-                    addressName={route.placeName}
-                    color={route.color}
-                    costTime={route.costTime}
-                  />
-                ))
-              : Object.entries(placesByType).map(([type, places]) => (
-                  <Pressable key={type} onPress={() => onPinCardPress(type)}>
-                    <PinCard pinType={type} colorClass={typeToColor[type]} number={places.length} />
-                  </Pressable>
-                ))}
+
+        {showDetails === 'loading' ? (
+          <Box className='flex-1 justify-center items-center'>
+            <Spinner size='large' />
           </Box>
-        </ScrollView>
+        ) : (
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingBottom: 45 }} // give space for last item
+            showsVerticalScrollIndicator={true}
+          >
+            <Box className='flex flex-row flex-wrap gap-2'>
+              {showDetails === 'show'
+                ? routes.map((route, index) => (
+                    <RouteCard
+                      key={index}
+                      routeType='walk'
+                      distance={route.distance}
+                      addressName={route.placeName}
+                      color={route.color}
+                      costTime={route.costTime}
+                    />
+                  ))
+                : Object.entries(placesByType).map(([type, places]) => (
+                    <Pressable key={type} onPress={() => onPinCardPress(type)}>
+                      <PinCard
+                        pinType={type}
+                        colorClass={typeToColor[type]}
+                        number={places.length}
+                      />
+                    </Pressable>
+                  ))}
+            </Box>
+          </ScrollView>
+        )}
       </Box>
     </Box>
   );
